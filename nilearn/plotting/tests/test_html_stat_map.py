@@ -9,16 +9,19 @@ from nibabel import Nifti1Image
 from nilearn import datasets, image
 from nilearn.plotting import html_stat_map
 from nilearn.image import new_img_like
+from nilearn.image import get_data
 from ..js_plotting_utils import colorscale
 from ..._utils.compat import _basestring
 
 
-def _check_html(html_view):
+def _check_html(html_view, title=None):
     """ Check the presence of some expected code in the html viewer
     """
     assert isinstance(html_view, html_stat_map.StatMapView)
     assert "var brain =" in str(html_view)
     assert "overlayImg" in str(html_view)
+    if title is not None:
+        assert "<title>{}</title>".format(title) in str(html_view)
 
 
 def _simulate_img(affine=np.eye(4)):
@@ -143,12 +146,12 @@ def test_mask_stat_map():
     # Try not to threshold anything
     mask_img, img, data_t, thre = html_stat_map._mask_stat_map(img,
                                                                threshold=None)
-    assert np.max(mask_img.get_data()) == 0
+    assert np.max(get_data(mask_img)) == 0
 
     # Now threshold at zero
     mask_img, img, data_t, thre = html_stat_map._mask_stat_map(img,
                                                                threshold=0)
-    assert np.min((data == 0) == mask_img.get_data())
+    assert np.min((data == 0) == get_data(mask_img))
 
 
 def test_load_bg_img():
@@ -304,9 +307,10 @@ def test_view_img():
         # Create a fake functional image by resample the template
         img = image.resample_img(mni, target_affine=3 * np.eye(3))
         html_view = html_stat_map.view_img(img)
-        _check_html(html_view)
-        html_view = html_stat_map.view_img(img, threshold='95%')
-        _check_html(html_view)
+        _check_html(html_view, title="Slice viewer")
+        html_view = html_stat_map.view_img(img, threshold='95%',
+                                           title="SOME_TITLE")
+        _check_html(html_view, title="SOME_TITLE")
         html_view = html_stat_map.view_img(img, bg_img=mni)
         _check_html(html_view)
         html_view = html_stat_map.view_img(img, bg_img=None)
@@ -314,7 +318,7 @@ def test_view_img():
         html_view = html_stat_map.view_img(img, threshold=2., vmax=4.)
         _check_html(html_view)
         html_view = html_stat_map.view_img(img, symmetric_cmap=False)
-        img_4d = image.new_img_like(img, img.get_data()[:, :, :, np.newaxis])
+        img_4d = image.new_img_like(img, get_data(img)[:, :, :, np.newaxis])
         assert len(img_4d.shape) == 4
         html_view = html_stat_map.view_img(img_4d, threshold=2., vmax=4.)
         _check_html(html_view)
