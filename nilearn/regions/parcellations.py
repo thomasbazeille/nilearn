@@ -8,6 +8,7 @@ from sklearn.feature_extraction import image
 from nilearn._utils.compat import Memory, delayed, Parallel
 
 from .rena_clustering import ReNA
+from .hierarchical_kmeans_clustering import HierarchicalKMeans
 from ..decomposition.multi_pca import MultiPCA
 from ..input_data import NiftiLabelsMasker
 from .._utils.compat import _basestring
@@ -26,7 +27,7 @@ def _estimator_fit(data, estimator, method=None):
     estimator: instance of estimator from sklearn
         MiniBatchKMeans or AgglomerativeClustering
 
-    method: str, {'kmeans', 'ward', 'complete', 'average', 'rena'}
+    method: str, {'kmeans', 'ward', 'complete', 'average', 'rena', 'hierarchical_kmeans'}
         A method to choose between for brain parcellations.
 
     Returns
@@ -122,7 +123,7 @@ class Parcellations(MultiPCA):
 
     Parameters
     ----------
-    method: str, {'kmeans', 'ward', 'complete', 'average', 'rena'}
+    method: str, {'kmeans', 'ward', 'complete', 'average', 'rena', 'hierarchical_kmeans'}
         A method to choose between for brain parcellations.
         For a small number of parcels, kmeans is usually advisable.
         For a large number of parcellations (several hundreds, or thousands),
@@ -246,7 +247,8 @@ class Parcellations(MultiPCA):
           giving the matrix.
 
     """
-    VALID_METHODS = ['kmeans', 'ward', 'complete', 'average', 'rena']
+    VALID_METHODS = ['kmeans', 'ward', 'complete',
+                     'average', 'rena', 'hierarchical_kmeans']
 
     def __init__(self, method, n_parcels=50,
                  random_state=0, mask=None, smoothing_fwhm=4.,
@@ -336,6 +338,15 @@ class Parcellations(MultiPCA):
                                      verbose=max(0, self.verbose - 1))
             labels = self._cache(_estimator_fit,
                                  func_memory_level=1)(components.T, kmeans)
+        elif self.method == 'hierarchical_kmeans':
+            hkmeans = HierarchicalKMeans(self.n_parcels, init="k-means++",
+                                         batch_size=1000, n_init=10,
+                                         max_no_improvement=10,
+                                         random_state=self.random_state,
+                                         verbose=max(0, self.verbose - 1))
+            # data ou data.T
+            labels = self._cache(_estimator_fit,
+                                 func_memory_level=1)(components.T, hkmeans)
 
         elif self.method == 'rena':
             rena = ReNA(mask_img_, n_clusters=self.n_parcels,
