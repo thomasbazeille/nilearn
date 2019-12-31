@@ -28,7 +28,7 @@ Clustering is commonly applied to resting-state data, but any brain
 functional data will give rise of a functional parcellation, capturing
 intrinsic brain architecture in the case of resting-state data.
 In the examples, we use naturalistic stimuli-based movie watching
-brain development data downloaded with the function 
+brain development data downloaded with the function
 :func:`fetch_development_fmri` (see :ref:`loading_data`).
 
 Applying clustering
@@ -49,12 +49,20 @@ Applying clustering
     * For a small number of clusters, it is preferable to use Kmeans
       clustering after spatially-smoothing the data.
 
-    Both clustering algorithms (as well as many others) are provided by
-    this object :class:`nilearn.regions.Parcellations` and full
-    code example in
+    Both algorithms are provided by this object
+    :class:`nilearn.regions.Parcellations` as well as two algorithms
+    tailored to more specific usecases:
+
+    * ReNA is a quicker alternative to Ward with a small loss of precision, it is
+      ideal to downsize the number of voxels by 10 quickly.
+
+    * Hierarchical KMeans is useful to obtain a small number of clusters after
+      spatial smoothing, that will be better balanced than with Kmeans.
+
+    All these algorithms are showcased in a full code example :
     :ref:`here<sphx_glr_auto_examples_03_connectivity_plot_data_driven_parcellations.py>`.
-    Ward clustering is the easiest to use, as it can be done with the Feature
-    agglomeration object. It is also quite fast. We detail it below.
+
+    Below, we focus on explaining the principle of Ward.
 
 |
 
@@ -154,5 +162,3 @@ approximated.
    All the steps discussed in this section can be seen implemented in
    :ref:`a full code example
    <sphx_glr_auto_examples_03_connectivity_plot_data_driven_parcellations.py>`.
-
-
