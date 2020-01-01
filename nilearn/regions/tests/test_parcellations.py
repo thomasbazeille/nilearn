@@ -100,7 +100,7 @@ def test_parcellations_fit_on_multi_nifti_images():
 
     parcellator = Parcellations(method='hierarchical_kmeans', n_parcels=5)
     parcellator.fit(fmri_imgs)
-    assert_true(parcellator.labels_img_ is not None)
+    assert parcellator.labels_img_ is not None
 
     # Smoke test with explicit mask image
     mask_img = np.ones((10, 11, 12))
